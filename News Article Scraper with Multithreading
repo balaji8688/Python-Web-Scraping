@@ -1,0 +1,28 @@
+import requests
+from bs4 import BeautifulSoup
+import concurrent.futures
+import csv
+import json
+
+def scrape_article(url):
+    response = requests.get(url)
+    soup = BeautifulSoup(response.text, 'html.parser')
+    return {
+        'headline': soup.find('h1').text.strip(),
+        'content': soup.find('div.article-body').text.strip(),
+        'date': soup.find('time')['datetime']
+    }
+
+article_urls = [...]  # List of URLs extracted from sitemap or homepage
+
+with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+    articles = list(executor.map(scrape_article, article_urls))
+
+# Export to CSV and JSON
+with open('articles.csv', 'w', newline='') as f:
+    writer = csv.DictWriter(f, fieldnames=['headline', 'content', 'date'])
+    writer.writeheader()
+    writer.writerows(articles)
+
+with open('articles.json', 'w') as f:
+    json.dump(articles, f)
