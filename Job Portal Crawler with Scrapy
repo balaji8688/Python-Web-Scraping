@@ -1,0 +1,25 @@
+# Create a Scrapy project and define items.py
+import scrapy
+
+class JobItem(scrapy.Item):
+    title = scrapy.Field()
+    company = scrapy.Field()
+    location = scrapy.Field()
+
+# Spider class in jobs_spider.py
+class JobSpider(scrapy.Spider):
+    name = 'job_spider'
+    start_urls = ['https://www.example-job-portal.com/jobs']
+
+    def parse(self, response):
+        for job in response.css('div.job-listing'):
+            yield {
+                'title': job.css('h2::text').get(),
+                'company': job.css('.company::text').get(),
+                'location': job.css('.location::text').get()
+            }
+        next_page = response.css('a.next-page::attr(href)').get()
+        if next_page:
+            yield response.follow(next_page, callback=self.parse)
+
+# Run with: scrapy crawl job_spider -o jobs.csv -o jobs.json
