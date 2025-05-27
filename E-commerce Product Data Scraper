@@ -1,0 +1,24 @@
+import requests
+from bs4 import BeautifulSoup
+import csv
+import json
+
+url = "https://books.toscrape.com/"
+response = requests.get(url)
+soup = BeautifulSoup(response.text, 'html.parser')
+
+products = []
+for book in soup.select('article.product_pod'):
+    title = book.h3.a['title']
+    price = book.select_one('p.price_color').text
+    products.append({'title': title, 'price': price})
+
+# Save to CSV
+with open('books.csv', 'w', newline='') as f:
+    writer = csv.DictWriter(f, fieldnames=['title', 'price'])
+    writer.writeheader()
+    writer.writerows(products)
+
+# Save to JSON
+with open('books.json', 'w') as f:
+    json.dump(products, f)
